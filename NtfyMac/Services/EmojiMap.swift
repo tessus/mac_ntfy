@@ -22,6 +22,7 @@ enum EmojiMap {
         "fire": "🔥", "boom": "💥", "zap": "⚡", "bangbang": "‼️",
         "exclamation": "❗", "question": "❓", "interrobang": "⁉️",
         "sos": "🆘", "ok": "🆗", "100": "💯", "checkered_flag": "🏁",
+        "new": "🆕",
         // tech / infra
         "computer": "💻", "desktop_computer": "🖥️", "iphone": "📱",
         "cd": "💿", "floppy_disk": "💾", "package": "📦", "gear": "⚙️",
@@ -39,7 +40,7 @@ enum EmojiMap {
         "telephone": "☎️", "phone": "📞", "bell": "🔔", "no_bell": "🔕",
         "loudspeaker": "📢", "mega": "📣", "speech_balloon": "💬",
         "calendar": "📅", "date": "📆", "alarm_clock": "⏰", "hourglass": "⌛",
-        "clock": "🕐", "stopwatch": "⏱️",
+        "clock": "🕐", "stopwatch": "⏱️", "inbox_tray": "📥",
         // people / reactions
         "tada": "🎉", "partying_face": "🥳", "trophy": "🏆", "medal": "🏅",
         "thumbsup": "👍", "+1": "👍", "thumbsdown": "👎", "-1": "👎",
@@ -53,6 +54,7 @@ enum EmojiMap {
         "zap_weather": "🌩️", "umbrella": "☔", "thermometer": "🌡️",
         "star": "⭐", "star2": "🌟", "sparkles": "✨", "rainbow": "🌈",
         "droplet": "💧", "ocean": "🌊", "leaves": "🍃", "deciduous_tree": "🌳",
+        "tornado": "🌪️",
         // misc objects
         "bulb": "💡", "flashlight": "🔦", "mag": "🔍", "mag_right": "🔎",
         "bookmark": "🔖", "pushpin": "📌", "paperclip": "📎", "pencil": "✏️",
@@ -63,6 +65,7 @@ enum EmojiMap {
         "headphones": "🎧", "microphone": "🎤", "game_die": "🎲",
         "dart": "🎯", "gift": "🎁", "balloon": "🎈", "crown": "👑",
         "gem": "💎", "hourglass_flowing_sand": "⏳",
+        "film_strip": "🎞️", "clapper": "🎬", "crab": "🦀",
         // food
         "coffee": "☕", "beer": "🍺", "pizza": "🍕", "hamburger": "🍔",
         "cake": "🍰", "birthday": "🎂", "apple": "🍎", "cookie": "🍪",
