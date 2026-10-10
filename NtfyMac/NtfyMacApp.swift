@@ -2,10 +2,9 @@
 //  NtfyMacApp.swift
 //  NtfyMac
 //
-//  App entry point. Runs permanently as a menu-bar agent (LSUIElement in
-//  Info.plist → no Dock icon). The main window and settings window are
-//  regular SwiftUI scenes that coexist with the MenuBarExtra without
-//  needing an activation-policy switch.
+//  Starts as a menu-bar agent. Management windows promote the application to
+//  a regular app for Dock and Stage Manager integration; closing the last
+//  window restores menu-bar-only operation.
 //
 
 import SwiftUI
@@ -159,8 +158,11 @@ enum SettingsWindow {
     }
 
     static func focusSoon(attemptsRemaining: Int = 20) {
-        AppActivation.enterWindowMode()
-        if focusExisting() || attemptsRemaining <= 0 { return }
+        if focusExisting() { return }
+        guard attemptsRemaining > 0 else {
+            AppActivation.exitWindowModeIfNeeded()
+            return
+        }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
             Task { @MainActor in
@@ -182,7 +184,7 @@ enum SettingsWindow {
             return false
         }
 
-        NSApp.activate(ignoringOtherApps: true)
+        AppActivation.enterWindowMode()
         window.deminiaturize(nil)
         window.orderFrontRegardless()
         window.makeKeyAndOrderFront(nil)
@@ -210,12 +212,33 @@ enum LaunchWindowOpener {
     }
 }
 
-/// Brings the app's windows to the front. The app is always an accessory
-/// (LSUIElement), including while a management or settings window is open.
+/// Uses regular application behavior while management windows are open.
 enum AppActivation {
     /// Activate the app and bring windows forward.
     static func enterWindowMode() {
+        if NSApp.activationPolicy() != .regular {
+            NSApp.setActivationPolicy(.regular)
+        }
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    static func isManagementWindow(_ window: NSWindow) -> Bool {
+        !(window is NSPanel)
+            && window.styleMask.contains(.titled)
+            && window.canBecomeMain
+    }
+
+    static func exitWindowModeIfNeeded() {
+        // willClose arrives before the closing window leaves NSApp.windows.
+        // Re-evaluate on the next turn so a newly opened window also counts.
+        DispatchQueue.main.async {
+            let hasOpenWindow = NSApp.windows.contains {
+                isManagementWindow($0) && ($0.isVisible || $0.isMiniaturized)
+            }
+            if !hasOpenWindow && NSApp.activationPolicy() != .accessory {
+                NSApp.setActivationPolicy(.accessory)
+            }
+        }
     }
 }
 
@@ -233,6 +256,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard !isDuplicateInstance else { return }
 
         installQuitMonitor()
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(managementWindowBecameMain(_:)),
+            name: NSWindow.didBecomeMainNotification, object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(managementWindowWillClose(_:)),
+            name: NSWindow.willCloseNotification, object: nil
+        )
 
         // Ask for notification permission once the app is fully launched (more
         // reliable than doing it during App.init).
@@ -242,22 +273,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         DispatchQueue.main.async {
             if showWindow {
-                // LSUIElement keeps the app as an accessory (no Dock icon).
-                // The main window still opens normally — it just doesn't get
-                // its own Stage Manager stage.
+                // A visible management window participates in Stage Manager.
                 AppActivation.enterWindowMode()
                 NSApp.windows
                     .first(where: { $0.identifier?.rawValue.hasPrefix("main") == true })?
                     .makeKeyAndOrderFront(nil)
             } else {
                 // Start as a menu-bar-only agent: close the auto-opened window.
-                // No activation-policy switch needed — LSUIElement already
-                // keeps us out of the Dock.
+                // Closing the auto-opened window also reconciles any mode
+                // promotion caused by its initial focus event.
                 for window in NSApp.windows where window.identifier?.rawValue.hasPrefix("main") == true {
                     window.close()
                 }
             }
         }
+    }
+
+    @objc private func managementWindowBecameMain(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow,
+              AppActivation.isManagementWindow(window) else { return }
+        // Covers system-created windows too, including the Settings scene.
+        // Do not reactivate on every focus event.
+        if NSApp.activationPolicy() != .regular {
+            NSApp.setActivationPolicy(.regular)
+        }
+    }
+
+    @objc private func managementWindowWillClose(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow,
+              AppActivation.isManagementWindow(window) else { return }
+        AppActivation.exitWindowModeIfNeeded()
     }
 
     /// Guarantees ⌘Q quits the app from anywhere the app is active — the main

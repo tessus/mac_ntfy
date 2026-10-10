@@ -214,7 +214,7 @@ struct MenuPanelView: View {
     }
 
     private func openMain() {
-        // Bring the window forward while remaining a menu-bar accessory.
+        // Restore normal Dock and Stage Manager behavior before opening.
         AppActivation.enterWindowMode()
         openWindow(id: "main")
     }
