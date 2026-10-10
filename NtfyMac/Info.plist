@@ -27,10 +27,9 @@
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<!--
-		  Self-hosted ntfy servers are commonly reached over plain HTTP, on a
-		  LAN IP, or with a self-signed certificate (often via an /etc/hosts
-		  entry). Allow those connections so the user's local configuration is
-		  honored.
+		  Self-hosted ntfy servers are commonly reached over plain HTTP or a
+		  LAN IP. TLS connections still use normal macOS certificate validation,
+		  including private CAs trusted in the user's Keychain.
 		-->
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>

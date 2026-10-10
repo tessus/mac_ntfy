@@ -334,6 +334,10 @@ enum HostsMappedHTTPClient {
                     endpoint.originalHost
                 )
             }
+            configureSystemTrust(
+                on: tls.securityProtocolOptions,
+                serverName: endpoint.originalHost
+            )
             // The parser below is deliberately HTTP/1.1-only.
             sec_protocol_options_add_tls_application_protocol(
                 tls.securityProtocolOptions,
@@ -349,6 +353,25 @@ enum HostsMappedHTTPClient {
             port: port,
             using: parameters
         )
+    }
+
+    /// Evaluate the peer with the normal macOS trust store while binding the
+    /// SSL policy to the URL's original host rather than the IP that the direct
+    /// transport dials. This preserves hostname checks and also honors private
+    /// root CAs that the user has trusted in the System or login Keychain.
+    private static func configureSystemTrust(
+        on options: sec_protocol_options_t,
+        serverName: String
+    ) {
+        sec_protocol_options_set_verify_block(options, { _, secTrust, complete in
+            let trust = sec_trust_copy_ref(secTrust).takeRetainedValue()
+            let policy = SecPolicyCreateSSL(true, serverName as CFString)
+            guard SecTrustSetPolicies(trust, policy) == errSecSuccess else {
+                complete(false)
+                return
+            }
+            complete(SecTrustEvaluateWithError(trust, nil))
+        }, queue)
     }
 
     /// Preserve the resolver's preferred family, then alternate IPv6 and IPv4
