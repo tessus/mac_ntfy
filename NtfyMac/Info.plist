@@ -39,5 +39,7 @@
 	<string>A native menu-bar client for ntfy.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>LSUIElement</key>
+	<true/>
 </dict>
 </plist>

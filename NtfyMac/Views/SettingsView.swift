@@ -57,7 +57,6 @@ struct SettingsView: View {
         .toggleStyle(.switch)
         .tint(Theme.settingsControlTint)
         .onAppear { SettingsWindow.focusSoon() }
-        .onDisappear { AppActivation.exitWindowModeIfNeeded() }
     }
 
     private var generalTab: some View {

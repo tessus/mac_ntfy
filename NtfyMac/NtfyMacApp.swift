@@ -2,9 +2,10 @@
 //  NtfyMacApp.swift
 //  NtfyMac
 //
-//  App entry point. Opens a normal main window at launch, then drops to a
-//  menu-bar agent (.accessory, no Dock icon) once the window is closed, so it
-//  keeps receiving messages in the background.
+//  App entry point. Runs permanently as a menu-bar agent (LSUIElement in
+//  Info.plist → no Dock icon). The main window and settings window are
+//  regular SwiftUI scenes that coexist with the MenuBarExtra without
+//  needing an activation-policy switch.
 //
 
 import SwiftUI
@@ -39,7 +40,7 @@ struct NtfyMacApp: App {
             // Explicit Quit so the App menu always shows "Quit Ntfy" bound to
             // ⌘Q while a window is focused. (A key monitor in AppDelegate also
             // covers the cases where SwiftUI's menu isn't active — e.g. the
-            // menu-bar popover, or just after an activation-policy switch.)
+            // menu-bar popover, or when no window is focused.)
             CommandGroup(replacing: .appTermination) {
                 Button("Quit Ntfy") { NSApp.terminate(nil) }
                     .keyboardShortcut("q", modifiers: .command)
@@ -58,10 +59,9 @@ struct NtfyMacApp: App {
         }
         .menuBarExtraStyle(.window)
 
-        // Dedicated settings window opened from the menu-bar panel. The
-        // standard SwiftUI `Settings` scene can be difficult to raise from an
-        // accessory app, so the menu-bar path opens this addressable window and
-        // then explicitly focuses it.
+        // Dedicated settings window opened from the menu-bar panel. A plain
+        // `Window` (rather than the `Settings` scene) is used so the menu-bar
+        // path can open it by id and then explicitly focus it.
         Window("Settings", id: "settings") {
             SettingsView(manager: manager)
                 .environmentObject(settings)
@@ -122,8 +122,8 @@ enum MainWindow {
     /// already exists).
     static var open: (() -> Void)?
 
-    /// Promotes the app to a regular window app and brings the main window to
-    /// the front, recreating it if it was previously closed.
+    /// Activates the app and brings the main window to the front, recreating
+    /// it if it was previously closed.
     static func show() {
         AppActivation.enterWindowMode()
         if let open {
@@ -145,7 +145,9 @@ enum MainWindow {
 enum SettingsWindow {
     static func prepareToOpen() {
         AppActivation.enterWindowMode()
-        closeTransientPanels()
+        // Let SwiftUI dismiss its menu-bar popover when focus moves. Do not
+        // order out arbitrary panels or borderless windows: those can also
+        // belong to the persistent status item or another system UI.
     }
 
     static func showUsingResponderChain() {
@@ -158,7 +160,6 @@ enum SettingsWindow {
 
     static func focusSoon(attemptsRemaining: Int = 20) {
         AppActivation.enterWindowMode()
-        closeTransientPanels()
         if focusExisting() || attemptsRemaining <= 0 { return }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) {
@@ -177,8 +178,7 @@ enum SettingsWindow {
                 && window.canBecomeMain
         }
 
-        guard let window = candidates.first(where: isSettingsWindow)
-                ?? candidates.first(where: { !isMainWindow($0) }) else {
+        guard let window = candidates.first(where: isSettingsWindow) else {
             return false
         }
 
@@ -189,16 +189,6 @@ enum SettingsWindow {
         return true
     }
 
-    private static func closeTransientPanels() {
-        for window in NSApp.windows where window.isVisible && isTransientPanel(window) {
-            window.orderOut(nil)
-        }
-    }
-
-    private static func isTransientPanel(_ window: NSWindow) -> Bool {
-        window is NSPanel || !window.styleMask.contains(.titled)
-    }
-
     private static func isSettingsWindow(_ window: NSWindow) -> Bool {
         let identifier = window.identifier?.rawValue.lowercased() ?? ""
         let title = window.title.lowercased()
@@ -206,10 +196,6 @@ enum SettingsWindow {
             || identifier.contains("preferences")
             || title.contains("settings")
             || title.contains("preferences")
-    }
-
-    private static func isMainWindow(_ window: NSWindow) -> Bool {
-        window.identifier?.rawValue.hasPrefix("main") == true
     }
 }
 
@@ -224,32 +210,12 @@ enum LaunchWindowOpener {
     }
 }
 
-/// Controls how the app appears to the system. It normally runs as a menu-bar
-/// `.accessory` (no Dock icon), but switches to a regular app while a real
-/// window is open so the window behaves like any other — including getting its
-/// own stage under Stage Manager and appearing in Mission Control.
+/// Brings the app's windows to the front. The app is always an accessory
+/// (LSUIElement), including while a management or settings window is open.
 enum AppActivation {
-    /// Promote to a regular, front-facing app (call before opening a window).
+    /// Activate the app and bring windows forward.
     static func enterWindowMode() {
-        if NSApp.activationPolicy() != .regular {
-            NSApp.setActivationPolicy(.regular)
-        }
         NSApp.activate(ignoringOtherApps: true)
-    }
-
-    /// Demote back to a menu-bar agent once no normal windows remain open.
-    static func exitWindowModeIfNeeded() {
-        DispatchQueue.main.async {
-            let hasNormalWindow = NSApp.windows.contains { window in
-                window.isVisible
-                    && !(window is NSPanel)
-                    && window.styleMask.contains(.titled)
-                    && window.canBecomeMain
-            }
-            if !hasNormalWindow && NSApp.activationPolicy() != .accessory {
-                NSApp.setActivationPolicy(.accessory)
-            }
-        }
     }
 }
 
@@ -276,27 +242,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         DispatchQueue.main.async {
             if showWindow {
-                // The app launches as a regular app, so the `Window` scene
-                // opens automatically — just bring it forward.
+                // LSUIElement keeps the app as an accessory (no Dock icon).
+                // The main window still opens normally — it just doesn't get
+                // its own Stage Manager stage.
                 AppActivation.enterWindowMode()
                 NSApp.windows
                     .first(where: { $0.identifier?.rawValue.hasPrefix("main") == true })?
                     .makeKeyAndOrderFront(nil)
             } else {
-                // Start as a menu-bar-only agent: close the auto-opened window
-                // and drop the Dock icon.
+                // Start as a menu-bar-only agent: close the auto-opened window.
+                // No activation-policy switch needed — LSUIElement already
+                // keeps us out of the Dock.
                 for window in NSApp.windows where window.identifier?.rawValue.hasPrefix("main") == true {
                     window.close()
                 }
-                NSApp.setActivationPolicy(.accessory)
             }
         }
     }
 
     /// Guarantees ⌘Q quits the app from anywhere the app is active — the main
-    /// window, the menu-bar popover, or right after the activation policy flips
-    /// between regular and accessory, where SwiftUI's menu key-equivalent can be
-    /// momentarily unavailable. This makes ⌘Q behave like every other Mac app.
+    /// window, the menu-bar popover, or when no window is focused — where
+    /// SwiftUI's menu key-equivalent can be momentarily unavailable.
+    /// This makes ⌘Q behave like every other Mac app.
     private func installQuitMonitor() {
         quitMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             let isCommandOnly = event.modifierFlags
@@ -309,10 +276,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// Reopening the app (clicking the Dock icon, or relaunching while already
-    /// running) should surface the main window. AppKit's default reopen doesn't
-    /// recreate a closed SwiftUI `Window` scene, so when no window is visible we
-    /// open one explicitly through the `MainWindow` bridge.
+    /// Reopening the app (e.g. relaunching while already running) should
+    /// surface the main window. AppKit's default reopen doesn't recreate a
+    /// closed SwiftUI `Window` scene, so when no window is visible we open one
+    /// explicitly through the `MainWindow` bridge.
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if !flag {
             Task { @MainActor in MainWindow.show() }

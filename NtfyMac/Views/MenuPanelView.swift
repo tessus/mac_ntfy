@@ -214,8 +214,7 @@ struct MenuPanelView: View {
     }
 
     private func openMain() {
-        // Become a regular app so the window is a normal, standalone window
-        // (its own Stage Manager stage, Mission Control entry, etc.).
+        // Bring the window forward while remaining a menu-bar accessory.
         AppActivation.enterWindowMode()
         openWindow(id: "main")
     }
