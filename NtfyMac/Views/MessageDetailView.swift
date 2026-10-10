@@ -178,6 +178,8 @@ struct MessageDetailView: View {
             runningActionID = nil
             switch result {
             case .opened: actionStatus[action.id] = "Opened ↗"
+			case .copied: actionStatus[action.id] = "Copied 📋"
+			case .notcopied: actionStatus[action.id] = "Not copied · (value empty)"
             case let .httpSucceeded(code): actionStatus[action.id] = "Sent · \(code)"
             case let .httpFailed(reason): actionStatus[action.id] = "Failed · \(reason)"
             case let .unsupported(reason): actionStatus[action.id] = reason

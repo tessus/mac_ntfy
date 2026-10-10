@@ -12,6 +12,8 @@ import AppKit
 
 enum ActionResult: Equatable {
     case opened
+	case copied
+	case notcopied
     case httpSucceeded(Int)
     case httpFailed(String)
     case unsupported(String)
@@ -27,6 +29,14 @@ enum ActionRunner {
             }
             NSWorkspace.shared.open(url)
             return .opened
+
+		case .copy:
+			guard let text = action.value else {
+				return .notcopied
+			}
+			NSPasteboard.general.clearContents()
+			NSPasteboard.general.setString(text, forType: .string)
+			return .copied
 
         case .http:
             return await runHTTP(action)

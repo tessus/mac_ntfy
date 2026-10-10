@@ -144,10 +144,10 @@ enum NtfyPriority: Int, CaseIterable, Codable {
     }
 }
 
-/// An action button attached to a message (`view`, `broadcast`, or `http`).
+/// An action button attached to a message (`view`, `copy`, `broadcast`, or `http`).
 struct NtfyAction: Codable, Equatable, Hashable, Identifiable {
     enum Kind: String, Codable {
-        case view, broadcast, http, unknown
+        case view, copy, broadcast, http, unknown
     }
 
     let id: String
@@ -157,6 +157,8 @@ struct NtfyAction: Codable, Equatable, Hashable, Identifiable {
 
     // view + http
     let url: String?
+	// copy
+	let value: String?
     // http
     let method: String?
     let headers: [String: String]?
@@ -166,7 +168,7 @@ struct NtfyAction: Codable, Equatable, Hashable, Identifiable {
     let extras: [String: String]?
 
     enum CodingKeys: String, CodingKey {
-        case id, action, label, clear, url, method, headers, body, intent, extras
+        case id, action, label, clear, url, value, method, headers, body, intent, extras
     }
 
     init(from decoder: Decoder) throws {
@@ -177,6 +179,7 @@ struct NtfyAction: Codable, Equatable, Hashable, Identifiable {
         label = (try? c.decode(String.self, forKey: .label)) ?? raw.capitalized
         clear = try? c.decode(Bool.self, forKey: .clear)
         url = try? c.decode(String.self, forKey: .url)
+		value = try? c.decode(String.self, forKey: .value)
         method = try? c.decode(String.self, forKey: .method)
         headers = try? c.decode([String: String].self, forKey: .headers)
         body = try? c.decode(String.self, forKey: .body)
@@ -187,6 +190,7 @@ struct NtfyAction: Codable, Equatable, Hashable, Identifiable {
     var symbol: String {
         switch action {
         case .view: return "safari"
+		case .copy: return "doc.on.doc"
         case .http: return "arrow.up.right.square"
         case .broadcast: return "antenna.radiowaves.left.and.right"
         case .unknown: return "questionmark"
