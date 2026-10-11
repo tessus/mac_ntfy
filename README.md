@@ -25,8 +25,8 @@ in the background and reconnects automatically.
   - **tags → emoji** rendering (`warning` → ⚠️, `rotating_light` → 🚨, …)
   - **click actions** (open a URL when the notification is tapped)
   - **attachments** (inline image previews + download)
-  - **action buttons** (`view`, `http`; `broadcast` is Android-only)
-  - **Markdown** message bodies
+  - **action buttons** (`view`, `copy`, `http`; `broadcast` is Android-only)
+  - **Markdown** message bodies with code blocks, links, and remote images
 - **Reliable background delivery** — long-lived streaming connections with
   exponential-backoff reconnect, plus automatic reconnect when the network
   returns or the Mac wakes from sleep. Missed messages are recovered via the
@@ -43,7 +43,8 @@ in the background and reconnects automatically.
 - **Publish messages** to a topic right from the app (title, priority, tags,
   click URL, scheduled delivery, attachments, Markdown).
 - **Launch at login** via the modern `SMAppService` API.
-- **Message history** with search, read/unread state, and mute.
+- **Message history** with search, read/unread state, per-message deletion, and mute.
+- **Adjustable text size** from 0–100% larger, with layouts that reflow for accessibility.
 
 ## 🖥 Requirements
 
@@ -224,7 +225,7 @@ NtfyMac/
 │  ├─ SubscriptionManager.swift   owns subscriptions, history, monitors net/sleep
 │  ├─ NotificationService.swift   UserNotifications bridge
 │  ├─ NtfyPublisher.swift    publish + connection test
-│  ├─ ActionRunner.swift     executes view/http action buttons
+│  ├─ ActionRunner.swift     executes view/copy/http action buttons
 │  ├─ PersistenceStore.swift JSON persistence
 │  ├─ LaunchAtLogin.swift    SMAppService wrapper
 │  └─ EmojiMap.swift         tag → emoji shortcodes
