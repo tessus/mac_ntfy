@@ -57,6 +57,12 @@ struct MessageListView: View {
                                     selectedMessageID = item.id
                                     manager.markRead(subscriptionID: item.subscriptionID, messageID: item.message.id)
                                 }
+                                .contextMenu {
+                                    Button("Delete Message", systemImage: "trash", role: .destructive) {
+                                        if selectedMessageID == item.id { selectedMessageID = nil }
+                                        manager.deleteMessage(id: item.id)
+                                    }
+                                }
                                 .background(
                                     RoundedRectangle(cornerRadius: Theme.cornerRadius)
                                         .stroke(selectedMessageID == item.id ? Color.accentColor : .clear, lineWidth: 2)

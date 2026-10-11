@@ -358,6 +358,12 @@ final class SubscriptionManager: ObservableObject {
         persistMessages()
     }
 
+    func deleteMessage(id: String) {
+        guard messages.contains(where: { $0.id == id }) else { return }
+        messages.removeAll { $0.id == id }
+        persistMessages()
+    }
+
     func markAllRead(subscriptionID: UUID? = nil) {
         var changed = false
         for idx in messages.indices {

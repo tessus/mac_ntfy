@@ -32,6 +32,7 @@ struct NtfyMacApp: App {
             MainView()
                 .environmentObject(manager)
                 .environmentObject(settings)
+                .environment(\.dynamicTypeSize, settings.dynamicTypeSize)
         }
         .defaultSize(width: 1000, height: 640)
         .commands {
@@ -51,6 +52,7 @@ struct NtfyMacApp: App {
             MenuPanelView()
                 .environmentObject(manager)
                 .environmentObject(settings)
+                .environment(\.dynamicTypeSize, settings.dynamicTypeSize)
         } label: {
             MenuBarLabel()
                 .environmentObject(manager)

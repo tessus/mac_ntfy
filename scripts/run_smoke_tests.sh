@@ -19,6 +19,7 @@ xcrun swiftc -parse-as-library -target "$TARGET" \
   NtfyMac/Services/NtfyConnection.swift \
   NtfyMac/Services/NotificationService.swift \
   NtfyMac/Services/ConfigurationBackup.swift \
+  NtfyMac/Services/ActionRunner.swift \
   NtfyMac/Views/DesignSystem.swift \
   Tests/SmokeHarness.swift \
   -o "$OUTPUT"

@@ -54,6 +54,7 @@ struct SettingsView: View {
                 .tabItem { Label("About", systemImage: "info.circle") }
         }
         .frame(width: 460, height: 520)
+        .environment(\.dynamicTypeSize, settings.dynamicTypeSize)
         .toggleStyle(.switch)
         .tint(Theme.settingsControlTint)
         .onAppear { SettingsWindow.focusSoon() }
@@ -86,6 +87,12 @@ struct SettingsView: View {
                               format: .number.grouping(.never))
                 }
                 Text(proxyFooter)
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Section("Appearance") {
+                Stepper("Text size: +\(settings.textSizeIncrease)%",
+                        value: $settings.textSizeIncrease, in: 0...100, step: 10)
+                Text("Increases text throughout the app. Layouts reflow automatically for larger text.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             Section("History") {

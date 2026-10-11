@@ -3,7 +3,8 @@
 //  NtfyMac
 //
 //  Executes the action buttons attached to ntfy messages. `view` opens a URL;
-//  `http` performs a network request; `broadcast` is Android-only and reported
+//  `copy` writes text to the clipboard; `http` performs a network request;
+//  `broadcast` is Android-only and reported
 //  as unsupported on macOS.
 //
 
@@ -12,8 +13,8 @@ import AppKit
 
 enum ActionResult: Equatable {
     case opened
-	case copied
-	case notcopied
+    case copied
+    case copyFailed(String)
     case httpSucceeded(Int)
     case httpFailed(String)
     case unsupported(String)
@@ -30,13 +31,15 @@ enum ActionRunner {
             NSWorkspace.shared.open(url)
             return .opened
 
-		case .copy:
-			guard let text = action.value else {
-				return .notcopied
-			}
-			NSPasteboard.general.clearContents()
-			NSPasteboard.general.setString(text, forType: .string)
-			return .copied
+        case .copy:
+            guard let text = action.value, !text.isEmpty else {
+                return .copyFailed("Value is empty")
+            }
+            NSPasteboard.general.clearContents()
+            guard NSPasteboard.general.setString(text, forType: .string) else {
+                return .copyFailed("Clipboard is unavailable")
+            }
+            return .copied
 
         case .http:
             return await runHTTP(action)

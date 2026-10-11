@@ -19,6 +19,9 @@ struct SmokeHarness {
         let defaults = UserDefaults(suiteName: suiteName)!
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let settings = AppSettings(defaults: defaults)
+        precondition(settings.textSizeIncrease == 0)
+        settings.textSizeIncrease = 100
+        precondition(settings.dynamicTypeSize == .accessibility2)
         settings.quietHoursEnabled = true
         settings.quietStartMinutes = 22 * 60
         settings.quietEndMinutes = 8 * 60
@@ -47,6 +50,7 @@ struct SmokeHarness {
         let decoded = try ConfigurationBackupService.decode(data)
         precondition(decoded.subscriptions.count == 1)
         precondition(decoded.subscriptions[0].topic == "backup-test")
+        precondition(decoded.settings.textSizeIncrease == 100)
 
         var local = subscription
         local.displayName = "Local name"
@@ -103,6 +107,30 @@ struct SmokeHarness {
         )
         precondition(renderedNotification.title == "🚨 标题")
         precondition(renderedNotification.body == "正文\n#ops\n#topic")
+
+        let markdownMessage = try JSONDecoder().decode(
+            NtfyMessage.self,
+            from: Data(
+                #"{"id":"markdown","time":1,"event":"message","topic":"test","content_type":"text/markdown","message":"![Logo](https://example.com/logo.jpg)\n\nHello **bold**.\n\n```\ncode\n```"}"#.utf8
+            )
+        )
+        precondition(markdownMessage.isMarkdown)
+        precondition(markdownMessage.markdownBlocks == [
+            .image(alt: "Logo", url: URL(string: "https://example.com/logo.jpg")!),
+            .text("Hello **bold**.\n\n```\ncode\n```")
+        ])
+
+        let copyMessage = try JSONDecoder().decode(
+            NtfyMessage.self,
+            from: Data(
+                #"{"id":"copy","time":1,"event":"message","topic":"test","actions":[{"id":"copy-action","action":"copy","label":"Copy","value":"example"}]}"#.utf8
+            )
+        )
+        precondition(copyMessage.actions?.first?.action == .copy)
+        precondition(copyMessage.actions?.first?.value == "example")
+        precondition(copyMessage.actions?.first?.symbol == "doc.on.doc")
+        precondition(EmojiMap.emoji(for: "new") == "🆕")
+        precondition(EmojiMap.emoji(for: "film_strip") == "🎞️")
 
         try await verifyDirectResponseStream()
 

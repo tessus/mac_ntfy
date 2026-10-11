@@ -103,6 +103,46 @@ extension NtfyMessage {
         guard let click, let url = URL(string: click) else { return nil }
         return url
     }
+
+    /// Splits Markdown into text and remote-image blocks. Foundation's Markdown
+    /// parser intentionally drops image nodes, so images need a native SwiftUI
+    /// view while surrounding text still uses full block-level Markdown parsing.
+    var markdownBlocks: [MarkdownBlock] {
+        guard let body = message else { return [] }
+        return MarkdownBlock.parse(body)
+    }
+}
+
+enum MarkdownBlock: Equatable {
+    case text(String)
+    case image(alt: String, url: URL)
+
+    static func parse(_ source: String) -> [MarkdownBlock] {
+        let pattern = #"!\[([^\]]*)\]\((https?://[^\s)]+)(?:\s+[\"'][^\"']*[\"'])?\)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [.text(source)] }
+        let range = NSRange(source.startIndex..., in: source)
+        let matches = regex.matches(in: source, range: range)
+        guard !matches.isEmpty else { return [.text(source)] }
+
+        var blocks: [MarkdownBlock] = []
+        var cursor = source.startIndex
+        for match in matches {
+            guard let whole = Range(match.range(at: 0), in: source),
+                  let altRange = Range(match.range(at: 1), in: source),
+                  let urlRange = Range(match.range(at: 2), in: source),
+                  let url = URL(string: String(source[urlRange])) else { continue }
+            appendText(String(source[cursor..<whole.lowerBound]), to: &blocks)
+            blocks.append(.image(alt: String(source[altRange]), url: url))
+            cursor = whole.upperBound
+        }
+        appendText(String(source[cursor...]), to: &blocks)
+        return blocks
+    }
+
+    private static func appendText(_ value: String, to blocks: inout [MarkdownBlock]) {
+        let text = value.trimmingCharacters(in: .newlines)
+        if !text.isEmpty { blocks.append(.text(text)) }
+    }
 }
 
 /// Priority levels 1–5 as defined by ntfy (3 is the default).
@@ -157,8 +197,8 @@ struct NtfyAction: Codable, Equatable, Hashable, Identifiable {
 
     // view + http
     let url: String?
-	// copy
-	let value: String?
+    // copy
+    let value: String?
     // http
     let method: String?
     let headers: [String: String]?
@@ -179,7 +219,7 @@ struct NtfyAction: Codable, Equatable, Hashable, Identifiable {
         label = (try? c.decode(String.self, forKey: .label)) ?? raw.capitalized
         clear = try? c.decode(Bool.self, forKey: .clear)
         url = try? c.decode(String.self, forKey: .url)
-		value = try? c.decode(String.self, forKey: .value)
+        value = try? c.decode(String.self, forKey: .value)
         method = try? c.decode(String.self, forKey: .method)
         headers = try? c.decode([String: String].self, forKey: .headers)
         body = try? c.decode(String.self, forKey: .body)
@@ -190,7 +230,7 @@ struct NtfyAction: Codable, Equatable, Hashable, Identifiable {
     var symbol: String {
         switch action {
         case .view: return "safari"
-		case .copy: return "doc.on.doc"
+        case .copy: return "doc.on.doc"
         case .http: return "arrow.up.right.square"
         case .broadcast: return "antenna.radiowaves.left.and.right"
         case .unknown: return "questionmark"

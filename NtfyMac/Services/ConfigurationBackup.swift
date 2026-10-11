@@ -61,6 +61,7 @@ struct BackupSettings: Codable {
     let playSound: Bool
     let minNotificationPriority: Int
     let historyLimitPerTopic: Int
+    let textSizeIncrease: Int?
     let launchAtLogin: Bool
     let showMenuBarCount: Bool
     let openWindowAtLaunch: Bool
@@ -79,6 +80,7 @@ struct BackupSettings: Codable {
         playSound = settings.playSound
         minNotificationPriority = settings.minNotificationPriority
         historyLimitPerTopic = settings.historyLimitPerTopic
+        textSizeIncrease = settings.textSizeIncrease
         launchAtLogin = settings.launchAtLogin
         showMenuBarCount = settings.showMenuBarCount
         openWindowAtLaunch = settings.openWindowAtLaunch
@@ -98,6 +100,7 @@ struct BackupSettings: Codable {
         settings.playSound = playSound
         settings.minNotificationPriority = max(1, min(5, minNotificationPriority))
         settings.historyLimitPerTopic = max(20, min(2_000, historyLimitPerTopic))
+        settings.textSizeIncrease = max(0, min(100, textSizeIncrease ?? settings.textSizeIncrease))
         settings.launchAtLogin = launchAtLogin
         settings.showMenuBarCount = showMenuBarCount
         settings.openWindowAtLaunch = openWindowAtLaunch

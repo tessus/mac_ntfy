@@ -55,7 +55,7 @@ struct MessageDetailView: View {
             }
 
             Text(headerTitle)
-                .font(.system(size: 24, weight: .bold))
+                .font(.title.bold())
                 .textSelection(.enabled)
 
             if !message.labelTags.isEmpty {
@@ -73,20 +73,50 @@ struct MessageDetailView: View {
     @ViewBuilder
     private func bodyView(_ body: String) -> some View {
         Group {
-            if message.isMarkdown, let attributed = try? AttributedString(
-                markdown: body,
-                options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
-            ) {
-                Text(attributed)
+            if message.isMarkdown {
+                VStack(alignment: .leading, spacing: 12) {
+                    ForEach(Array(message.markdownBlocks.enumerated()), id: \.offset) { _, block in
+                        markdownBlock(block)
+                    }
+                }
             } else {
                 Text(body)
+                    .textSelection(.enabled)
             }
         }
         .font(.body)
-        .textSelection(.enabled)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
         .cardBackground()
+    }
+
+    @ViewBuilder
+    private func markdownBlock(_ block: MarkdownBlock) -> some View {
+        switch block {
+        case let .text(source):
+            if let attributed = try? AttributedString(markdown: source) {
+                Text(attributed).textSelection(.enabled)
+            } else {
+                Text(source).textSelection(.enabled)
+            }
+        case let .image(alt, url):
+            Link(destination: url) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case let .success(image):
+                        image.resizable().scaledToFit()
+                            .frame(maxHeight: 360)
+                            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
+                    case .failure:
+                        Label(alt.isEmpty ? "Open image" : alt, systemImage: "photo.badge.exclamationmark")
+                    default:
+                        ProgressView().frame(maxWidth: .infinity, minHeight: 100)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(alt.isEmpty ? "Image" : alt)
+        }
     }
 
     // MARK: Attachment
@@ -178,8 +208,8 @@ struct MessageDetailView: View {
             runningActionID = nil
             switch result {
             case .opened: actionStatus[action.id] = "Opened ↗"
-			case .copied: actionStatus[action.id] = "Copied 📋"
-			case .notcopied: actionStatus[action.id] = "Not copied · (value empty)"
+            case .copied: actionStatus[action.id] = "Copied 📋"
+            case let .copyFailed(reason): actionStatus[action.id] = "Not copied · \(reason)"
             case let .httpSucceeded(code): actionStatus[action.id] = "Sent · \(code)"
             case let .httpFailed(reason): actionStatus[action.id] = "Failed · \(reason)"
             case let .unsupported(reason): actionStatus[action.id] = reason

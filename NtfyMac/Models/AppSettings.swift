@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import SwiftUI
 
 @MainActor
 final class AppSettings: ObservableObject {
@@ -23,6 +24,7 @@ final class AppSettings: ObservableObject {
         static let quietStartMinutes = "quietStartMinutes"
         static let quietEndMinutes = "quietEndMinutes"
         static let notificationsPausedUntil = "notificationsPausedUntil"
+        static let textSizeIncrease = "textSizeIncrease"
     }
 
     @Published var defaultServer: String {
@@ -40,6 +42,10 @@ final class AppSettings: ObservableObject {
     }
     @Published var historyLimitPerTopic: Int {
         didSet { defaults.set(historyLimitPerTopic, forKey: Keys.historyLimit) }
+    }
+    /// Percentage increase applied through SwiftUI's dynamic type system.
+    @Published var textSizeIncrease: Int {
+        didSet { defaults.set(max(0, min(100, textSizeIncrease)), forKey: Keys.textSizeIncrease) }
     }
     @Published var showMenuBarCount: Bool {
         didSet { defaults.set(showMenuBarCount, forKey: Keys.showMenuBarCount) }
@@ -111,6 +117,7 @@ final class AppSettings: ObservableObject {
             Keys.playSound: true,
             Keys.minPriority: 1,
             Keys.historyLimit: 200,
+            Keys.textSizeIncrease: 0,
             Keys.showMenuBarCount: true,
             Keys.openWindowAtLaunch: true,
             Keys.quietHoursEnabled: false,
@@ -123,6 +130,7 @@ final class AppSettings: ObservableObject {
         playSound = defaults.bool(forKey: Keys.playSound)
         minNotificationPriority = defaults.integer(forKey: Keys.minPriority)
         historyLimitPerTopic = defaults.integer(forKey: Keys.historyLimit)
+        textSizeIncrease = max(0, min(100, defaults.integer(forKey: Keys.textSizeIncrease)))
         showMenuBarCount = defaults.bool(forKey: Keys.showMenuBarCount)
         openWindowAtLaunch = defaults.bool(forKey: Keys.openWindowAtLaunch)
         launchAtLogin = LaunchAtLogin.isEnabled
@@ -136,6 +144,17 @@ final class AppSettings: ObservableObject {
         proxyType = proxy.type
         proxyHost = proxy.host
         proxyPort = proxy.port
+    }
+
+    var dynamicTypeSize: DynamicTypeSize {
+        switch textSizeIncrease {
+        case 1...20: return .xLarge
+        case 21...40: return .xxLarge
+        case 41...60: return .xxxLarge
+        case 61...80: return .accessibility1
+        case 81...100: return .accessibility2
+        default: return .large
+        }
     }
 
     private func notifyProxyChanged() {
