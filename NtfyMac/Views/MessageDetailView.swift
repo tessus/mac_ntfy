@@ -94,11 +94,25 @@ struct MessageDetailView: View {
     private func markdownBlock(_ block: MarkdownBlock) -> some View {
         switch block {
         case let .text(source):
-            if let attributed = try? AttributedString(markdown: source) {
+            if let attributed = try? AttributedString(
+                markdown: source,
+                options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+            ) {
                 Text(attributed).textSelection(.enabled)
             } else {
                 Text(source).textSelection(.enabled)
             }
+        case let .code(source):
+            ScrollView(.horizontal) {
+                Text(source)
+                    .font(.system(.body, design: .monospaced))
+                    .textSelection(.enabled)
+                    .fixedSize(horizontal: true, vertical: true)
+                    .padding(12)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(nsColor: .controlBackgroundColor),
+                        in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         case let .image(alt, url):
             Link(destination: url) {
                 AsyncImage(url: url) { phase in

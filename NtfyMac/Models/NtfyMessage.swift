@@ -115,33 +115,69 @@ extension NtfyMessage {
 
 enum MarkdownBlock: Equatable {
     case text(String)
+    case code(String)
     case image(alt: String, url: URL)
 
+    /// Produces actual layout blocks rather than one `AttributedString`.
+    /// Foundation preserves block intents as attributes but removes the newlines
+    /// between them; SwiftUI's `Text` does not recreate those boundaries.
     static func parse(_ source: String) -> [MarkdownBlock] {
-        let pattern = #"!\[([^\]]*)\]\((https?://[^\s)]+)(?:\s+[\"'][^\"']*[\"'])?\)"#
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [.text(source)] }
-        let range = NSRange(source.startIndex..., in: source)
-        let matches = regex.matches(in: source, range: range)
-        guard !matches.isEmpty else { return [.text(source)] }
-
         var blocks: [MarkdownBlock] = []
-        var cursor = source.startIndex
-        for match in matches {
-            guard let whole = Range(match.range(at: 0), in: source),
-                  let altRange = Range(match.range(at: 1), in: source),
-                  let urlRange = Range(match.range(at: 2), in: source),
-                  let url = URL(string: String(source[urlRange])) else { continue }
-            appendText(String(source[cursor..<whole.lowerBound]), to: &blocks)
-            blocks.append(.image(alt: String(source[altRange]), url: url))
-            cursor = whole.upperBound
+        var paragraphLines: [String] = []
+        var codeLines: [String] = []
+        var closingFence: String?
+
+        func flushParagraph() {
+            guard !paragraphLines.isEmpty else { return }
+            blocks.append(.text(paragraphLines.joined(separator: "\n")))
+            paragraphLines.removeAll(keepingCapacity: true)
         }
-        appendText(String(source[cursor...]), to: &blocks)
+
+        func flushCode() {
+            blocks.append(.code(codeLines.joined(separator: "\n")))
+            codeLines.removeAll(keepingCapacity: true)
+        }
+
+        for lineSlice in source.split(separator: "\n", omittingEmptySubsequences: false) {
+            let line = String(lineSlice)
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+
+            if let fence = closingFence {
+                if trimmed.hasPrefix(fence) {
+                    flushCode()
+                    closingFence = nil
+                } else {
+                    codeLines.append(line)
+                }
+                continue
+            }
+
+            if trimmed.hasPrefix("```") || trimmed.hasPrefix("~~~") {
+                flushParagraph()
+                closingFence = String(trimmed.prefix(3))
+            } else if trimmed.isEmpty {
+                flushParagraph()
+            } else if let image = standaloneImage(in: trimmed) {
+                flushParagraph()
+                blocks.append(image)
+            } else {
+                paragraphLines.append(line)
+            }
+        }
+
+        if closingFence != nil { flushCode() }
+        flushParagraph()
         return blocks
     }
 
-    private static func appendText(_ value: String, to blocks: inout [MarkdownBlock]) {
-        let text = value.trimmingCharacters(in: .newlines)
-        if !text.isEmpty { blocks.append(.text(text)) }
+    private static func standaloneImage(in line: String) -> MarkdownBlock? {
+        let pattern = #"^!\[([^\]]*)\]\((https?://[^\s)]+)(?:\s+[\"'][^\"']*[\"'])?\)$"#
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let match = regex.firstMatch(in: line, range: NSRange(line.startIndex..., in: line)),
+              let altRange = Range(match.range(at: 1), in: line),
+              let urlRange = Range(match.range(at: 2), in: line),
+              let url = URL(string: String(line[urlRange])) else { return nil }
+        return .image(alt: String(line[altRange]), url: url)
     }
 }
 

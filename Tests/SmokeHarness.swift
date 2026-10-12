@@ -117,8 +117,62 @@ struct SmokeHarness {
         precondition(markdownMessage.isMarkdown)
         precondition(markdownMessage.markdownBlocks == [
             .image(alt: "Logo", url: URL(string: "https://example.com/logo.jpg")!),
-            .text("Hello **bold**.\n\n```\ncode\n```")
-        ])
+            .text("Hello **bold**."),
+            .code("code"),
+        ], "Images, paragraphs, and fenced code must be separate render blocks")
+
+        let issue38Sample = MarkdownBlock.parse(
+            """
+            ![Logo](https://evermeet.cx/wiki/images/d/d4/Logo.jpg)
+
+            I just love Markdown and `inline code`.
+
+            ```
+            Line1: This is a multiline
+            Line2: code block.
+            ```
+
+            [Link to a website](https://evermeet.cx)
+            """
+        )
+        precondition(issue38Sample.count == 4,
+                     "Issue #38 sample must produce image, paragraph, code, and link blocks")
+        precondition(issue38Sample[0] == .image(
+            alt: "Logo",
+            url: URL(string: "https://evermeet.cx/wiki/images/d/d4/Logo.jpg")!
+        ))
+        precondition(issue38Sample[1] == .text("I just love Markdown and `inline code`."))
+        precondition(issue38Sample[2] == .code("Line1: This is a multiline\nLine2: code block."))
+        precondition(issue38Sample[3] == .text("[Link to a website](https://evermeet.cx)"))
+
+        let codeContainingImage = MarkdownBlock.parse(
+            """
+            ```markdown
+            ![not an image block](https://example.com/in-code.png)
+
+            second line
+            ```
+            """
+        )
+        precondition(codeContainingImage == [
+            .code("![not an image block](https://example.com/in-code.png)\n\nsecond line")
+        ], "Markdown-like text inside a fence must remain code")
+        precondition(MarkdownBlock.parse("before\n\n```\nunclosed") == [
+            .text("before"), .code("unclosed")
+        ], "An unclosed fence must retain its code contents")
+
+        let inline = try AttributedString(
+            markdown: issue38Sample[1].source,
+            options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+        )
+        precondition(inline.runs.contains { $0.inlinePresentationIntent?.contains(.code) == true },
+                     "Inline code styling must be preserved")
+        let linked = try AttributedString(
+            markdown: issue38Sample[3].source,
+            options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+        )
+        precondition(linked.runs.contains { $0.link == URL(string: "https://evermeet.cx")! },
+                     "Link destinations must be preserved")
 
         let copyMessage = try JSONDecoder().decode(
             NtfyMessage.self,
@@ -226,6 +280,15 @@ struct SmokeHarness {
         }
         response.append(Data("0\r\n\r\n".utf8))
         return response
+    }
+}
+
+private extension MarkdownBlock {
+    var source: String {
+        switch self {
+        case let .text(source), let .code(source): return source
+        case .image: return ""
+        }
     }
 }
 
