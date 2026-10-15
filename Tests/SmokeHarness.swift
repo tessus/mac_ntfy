@@ -20,8 +20,13 @@ struct SmokeHarness {
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let settings = AppSettings(defaults: defaults)
         precondition(settings.textSizeIncrease == 0)
+        precondition(settings.textScale == 1)
         settings.textSizeIncrease = 100
-        precondition(settings.dynamicTypeSize == .accessibility2)
+        precondition(settings.textScale == 2)
+        precondition(AppTextStyle.body.size(scale: settings.textScale) == AppTextStyle.body.baseSize * 2)
+        let reloadedSettings = AppSettings(defaults: defaults)
+        precondition(reloadedSettings.textSizeIncrease == 100)
+        precondition(reloadedSettings.textScale == 2)
         settings.quietHoursEnabled = true
         settings.quietStartMinutes = 22 * 60
         settings.quietEndMinutes = 8 * 60

@@ -67,9 +67,9 @@ struct DetailPlaceholder: View {
                     .foregroundStyle(Theme.brandGradient)
             }
             Text("Select a message")
-                .font(.title2.weight(.semibold))
+                .appFont(.title2, weight: .semibold)
             Text("Pick a notification from the list to see its full content, attachments and actions.")
-                .font(.subheadline)
+                .appFont(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 340)

@@ -53,8 +53,7 @@ struct SettingsView: View {
             aboutTab
                 .tabItem { Label("About", systemImage: "info.circle") }
         }
-        .frame(width: 460, height: 520)
-        .environment(\.dynamicTypeSize, settings.dynamicTypeSize)
+        .frame(minWidth: 460, idealWidth: 520, minHeight: 520, idealHeight: 640)
         .toggleStyle(.switch)
         .tint(Theme.settingsControlTint)
         .onAppear { SettingsWindow.focusSoon() }
@@ -87,13 +86,13 @@ struct SettingsView: View {
                               format: .number.grouping(.never))
                 }
                 Text(proxyFooter)
-                    .font(.caption).foregroundStyle(.secondary)
+                    .appFont(.caption).foregroundStyle(.secondary)
             }
             Section("Appearance") {
                 Stepper("Text size: +\(settings.textSizeIncrease)%",
                         value: $settings.textSizeIncrease, in: 0...100, step: 10)
                 Text("Increases text throughout the app. Layouts reflow automatically for larger text.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .appFont(.caption).foregroundStyle(.secondary)
             }
             Section("History") {
                 Stepper("Keep \(settings.historyLimitPerTopic) messages per topic",
@@ -112,10 +111,10 @@ struct SettingsView: View {
                     }
                 }
                 Text("Backups include subscriptions and settings, but never passwords, access tokens, message history, or sync cursors. Existing credentials are preserved when importing a matching subscription.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .appFont(.caption).foregroundStyle(.secondary)
                 if let backupStatus {
                     Label(backupStatus, systemImage: backupFailed ? "xmark.circle" : "checkmark.circle")
-                        .font(.caption)
+                        .appFont(.caption)
                         .foregroundStyle(backupFailed ? .red : .green)
                 }
             }
@@ -187,7 +186,7 @@ struct SettingsView: View {
                 }
                 if !authIsGranted {
                     Text("macOS won't show notifications until permission is granted. If this app isn't listed in System Settings, the build may be unsigned — install a signed release.")
-                        .font(.caption).foregroundStyle(.secondary)
+                        .appFont(.caption).foregroundStyle(.secondary)
                 }
             }
             Section {
@@ -202,7 +201,7 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.menu)
                 Text("Lower-priority messages are still stored in history.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .appFont(.caption).foregroundStyle(.secondary)
             }
             Section("Pause notifications") {
                 TimelineView(.periodic(from: .now, by: 30)) { context in
@@ -226,7 +225,7 @@ struct SettingsView: View {
                     }
                 }
                 Text("Messages continue to sync and remain unread; only macOS alerts are paused.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .appFont(.caption).foregroundStyle(.secondary)
             }
             Section("Quiet hours") {
                 Toggle("Enable quiet hours", isOn: $settings.quietHoursEnabled)
@@ -237,7 +236,7 @@ struct SettingsView: View {
                                displayedComponents: .hourAndMinute)
                 }
                 Text("Overnight ranges are supported. Messages are still stored during quiet hours.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .appFont(.caption).foregroundStyle(.secondary)
             }
             Section {
                 Button("Open System Notification Settings") {
@@ -281,16 +280,16 @@ struct SettingsView: View {
                 Image(systemName: "bell.and.waves.left.and.right.fill")
                     .font(.system(size: 36)).foregroundStyle(.white)
             }
-            Text("Ntfy for Mac").font(.title2.bold())
+            Text("Ntfy for Mac").appFont(.title2, weight: .bold)
             Text(versionText)
-                .font(.caption).foregroundStyle(.secondary)
+                .appFont(.caption).foregroundStyle(.secondary)
             Text("A native menu-bar client for ntfy.sh and self-hosted ntfy servers.")
-                .font(.subheadline)
+                .appFont(.subheadline)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: 320)
             Link("ntfy documentation", destination: URL(string: "https://docs.ntfy.sh")!)
-                .font(.callout)
+                .appFont(.callout)
             Spacer()
         }
         .padding(24)

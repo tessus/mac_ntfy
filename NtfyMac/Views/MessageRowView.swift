@@ -28,19 +28,19 @@ struct MessageRowView: View {
             VStack(alignment: .leading, spacing: 5) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(title)
-                        .font(.headline)
+                        .appFont(.headline)
                         .fontWeight(stored.isRead ? .semibold : .bold)
                         .lineLimit(1)
                     Spacer(minLength: 4)
                     TimestampText(date: message.date)
-                        .font(.caption2)
+                        .appFont(.caption2)
                         .foregroundStyle(.secondary)
                         .fixedSize()
                 }
 
                 if let body = message.message, !body.isEmpty {
                     Text(body)
-                        .font(.subheadline)
+                        .appFont(.subheadline)
                         .foregroundStyle(.primary.opacity(0.85))
                         .lineLimit(3)
                 }

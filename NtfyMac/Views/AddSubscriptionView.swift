@@ -64,13 +64,13 @@ struct AddSubscriptionView: View {
                     .fill(Theme.brandGradient)
                     .frame(width: 40, height: 40)
                 Image(systemName: editing == nil ? "plus" : "pencil")
-                    .foregroundStyle(.white).font(.headline)
+                    .foregroundStyle(.white).appFont(.headline)
             }
             VStack(alignment: .leading) {
                 Text(editing == nil ? "Add Subscription" : "Edit Subscription")
-                    .font(.title3.bold())
+                    .appFont(.title3, weight: .bold)
                 Text("Receive notifications from an ntfy topic")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .appFont(.caption).foregroundStyle(.secondary)
             }
             Spacer()
         }
@@ -105,7 +105,7 @@ struct AddSubscriptionView: View {
             switch authMode {
             case .none:
                 Text("Use for public, unprotected topics.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .appFont(.caption).foregroundStyle(.secondary)
             case .basic:
                 LabeledField("Username") {
                     TextField("user", text: $username).textFieldStyle(.roundedBorder)
@@ -140,7 +140,7 @@ struct AddSubscriptionView: View {
     private var filterSection: some View {
         SectionCard(title: "Filters (optional)", systemImage: "line.3.horizontal.decrease.circle") {
             Text("Only notify for these priorities:")
-                .font(.caption).foregroundStyle(.secondary)
+                .appFont(.caption).foregroundStyle(.secondary)
             HStack(spacing: 8) {
                 ForEach(NtfyPriority.allCases, id: \.self) { p in
                     Toggle(isOn: Binding(
@@ -175,7 +175,7 @@ struct AddSubscriptionView: View {
 
             if let testResult {
                 Label(testResult, systemImage: testOK ? "checkmark.circle.fill" : "xmark.circle.fill")
-                    .font(.caption)
+                    .appFont(.caption)
                     .foregroundStyle(testOK ? .green : .red)
             }
 
@@ -268,7 +268,7 @@ struct SectionCard<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Label(title, systemImage: systemImage)
-                .font(.subheadline.weight(.semibold))
+                .appFont(.subheadline, weight: .semibold)
                 .foregroundStyle(.secondary)
             content
         }
@@ -287,7 +287,7 @@ struct LabeledField<Content: View>: View {
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(label).font(.caption).foregroundStyle(.secondary)
+            Text(label).appFont(.caption).foregroundStyle(.secondary)
             content
         }
     }

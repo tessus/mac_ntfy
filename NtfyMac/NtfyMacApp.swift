@@ -32,7 +32,7 @@ struct NtfyMacApp: App {
             MainView()
                 .environmentObject(manager)
                 .environmentObject(settings)
-                .environment(\.dynamicTypeSize, settings.dynamicTypeSize)
+                .appTextScale(settings.textScale)
         }
         .defaultSize(width: 1000, height: 640)
         .commands {
@@ -52,7 +52,7 @@ struct NtfyMacApp: App {
             MenuPanelView()
                 .environmentObject(manager)
                 .environmentObject(settings)
-                .environment(\.dynamicTypeSize, settings.dynamicTypeSize)
+                .appTextScale(settings.textScale)
         } label: {
             MenuBarLabel()
                 .environmentObject(manager)
@@ -66,12 +66,14 @@ struct NtfyMacApp: App {
         Window("Settings", id: "settings") {
             SettingsView(manager: manager)
                 .environmentObject(settings)
+                .appTextScale(settings.textScale)
         }
         .defaultSize(width: 460, height: 380)
 
         Settings {
             SettingsView(manager: manager)
                 .environmentObject(settings)
+                .appTextScale(settings.textScale)
         }
     }
 }

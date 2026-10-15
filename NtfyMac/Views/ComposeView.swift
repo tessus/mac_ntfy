@@ -21,8 +21,8 @@ struct ComposeView: View {
         VStack(spacing: 0) {
             HStack {
                 VStack(alignment: .leading) {
-                    Text("Publish Message").font(.title3.bold())
-                    Text(subscription.topicURLString).font(.caption).foregroundStyle(.secondary)
+                    Text("Publish Message").appFont(.title3, weight: .bold)
+                    Text(subscription.topicURLString).appFont(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
             }
@@ -37,7 +37,7 @@ struct ComposeView: View {
                     LabeledField("Message") {
                         TextEditor(text: $req.message)
                             .frame(height: 110)
-                            .font(.body)
+                            .appFont(.body)
                             .padding(4)
                             .overlay(RoundedRectangle(cornerRadius: 6).stroke(.quaternary))
                     }
@@ -66,7 +66,7 @@ struct ComposeView: View {
                     Toggle("Format body as Markdown", isOn: $req.markdown)
                     if let errorText {
                         Label(errorText, systemImage: "exclamationmark.triangle")
-                            .font(.caption).foregroundStyle(.red)
+                            .appFont(.caption).foregroundStyle(.red)
                     }
                 }
                 .padding(20)

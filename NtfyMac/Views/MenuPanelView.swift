@@ -69,15 +69,15 @@ struct MenuPanelView: View {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(Theme.brandGradient)
                     .frame(width: 30, height: 30)
-                Image(systemName: "bell.fill").foregroundStyle(.white).font(.caption)
+                Image(systemName: "bell.fill").foregroundStyle(.white).appFont(.caption)
             }
             VStack(alignment: .leading, spacing: 1) {
-                Text("Ntfy").font(.headline)
+                Text("Ntfy").appFont(.headline)
                 HStack(spacing: 5) {
                     StatusDot(color: manager.anyConnected ? .green : .orange,
                               pulsing: manager.anyConnected)
                     Text(connectionSummary)
-                        .font(.caption2).foregroundStyle(.secondary)
+                        .appFont(.caption2).foregroundStyle(.secondary)
                 }
             }
             Spacer()
@@ -99,11 +99,11 @@ struct MenuPanelView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("Unread")
-                    .font(.caption.weight(.semibold))
+                    .appFont(.caption, weight: .semibold)
                     .foregroundStyle(.secondary)
                 Spacer()
                 Text("\(unreadMessages.count) total")
-                    .font(.caption2)
+                    .appFont(.caption2)
                     .foregroundStyle(.tertiary)
             }
             .padding(.horizontal, 10)
@@ -138,7 +138,7 @@ struct MenuPanelView: View {
                 .font(.system(size: 30))
                 .foregroundStyle(.secondary)
             Text(manager.messages.isEmpty ? "No notifications yet" : "No unread notifications")
-                .font(.subheadline)
+                .appFont(.subheadline)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -276,25 +276,25 @@ struct MenuMessageRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(title)
-                        .font(.subheadline.weight(.semibold))
+                        .appFont(.subheadline, weight: .semibold)
                         .lineLimit(1)
                     Spacer(minLength: 4)
                     TimestampText(date: stored.message.date)
-                        .font(.caption2)
+                        .appFont(.caption2)
                         .foregroundStyle(.secondary)
                         .fixedSize()
                 }
 
                 if let body = stored.message.message, !body.isEmpty {
                     Text(body)
-                        .font(.caption)
+                        .appFont(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
                 }
 
                 HStack(spacing: 6) {
                     Label(channelName, systemImage: "number")
-                        .font(.caption2)
+                        .appFont(.caption2)
                         .foregroundStyle(.tertiary)
                         .lineLimit(1)
                     Spacer(minLength: 0)
@@ -304,7 +304,7 @@ struct MenuMessageRow: View {
                         Label("Mark Read", systemImage: "checkmark.circle")
                             .labelStyle(.titleAndIcon)
                     }
-                    .font(.caption2.weight(.medium))
+                    .appFont(.caption2, weight: .medium)
                     .buttonStyle(.plain)
                     .foregroundStyle(accent)
                     .help("Mark this notification as read")

@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import AppKit
 
 extension Color {
     /// Parses `#RRGGBB` / `#RRGGBBAA` (and the 3-digit shorthand) hex strings.
@@ -31,6 +32,54 @@ extension Color {
             return nil
         }
         self = Color(.sRGB, red: r, green: g, blue: b, opacity: a)
+    }
+}
+
+private struct AppTextScaleKey: EnvironmentKey {
+    static let defaultValue: CGFloat = 1
+}
+
+extension EnvironmentValues {
+    var appTextScale: CGFloat {
+        get { self[AppTextScaleKey.self] }
+        set { self[AppTextScaleKey.self] = newValue }
+    }
+}
+
+enum AppTextStyle {
+    case title, title2, title3, headline, body, callout, subheadline, caption, caption2
+
+    var baseSize: CGFloat {
+        NSFont.preferredFont(forTextStyle: nsTextStyle).pointSize
+    }
+
+    private var nsTextStyle: NSFont.TextStyle {
+        switch self {
+        case .title: return .title1
+        case .title2: return .title2
+        case .title3: return .title3
+        case .headline: return .headline
+        case .body: return .body
+        case .callout: return .callout
+        case .subheadline: return .subheadline
+        case .caption: return .caption1
+        case .caption2: return .caption2
+        }
+    }
+
+    func size(scale: CGFloat) -> CGFloat {
+        baseSize * max(1, min(2, scale))
+    }
+}
+
+private struct AppFontModifier: ViewModifier {
+    @Environment(\.appTextScale) private var scale
+    let style: AppTextStyle
+    let weight: Font.Weight?
+    let design: Font.Design
+
+    func body(content: Content) -> some View {
+        content.font(.system(size: style.size(scale: scale), weight: weight, design: design))
     }
 }
 
@@ -74,6 +123,20 @@ extension View {
     func cardBackground(highlighted: Bool = false) -> some View {
         modifier(CardBackground(highlighted: highlighted))
     }
+
+    /// Applies the app's persisted text scale to a semantic macOS font.
+    func appFont(_ style: AppTextStyle,
+                 weight: Font.Weight? = nil,
+                 design: Font.Design = .default) -> some View {
+        modifier(AppFontModifier(style: style, weight: weight, design: design))
+    }
+
+    /// Installs text scaling for a scene and gives controls without an explicit
+    /// font the same scalable body size as the rest of the interface.
+    func appTextScale(_ scale: CGFloat) -> some View {
+        environment(\.appTextScale, scale)
+            .font(.system(size: AppTextStyle.body.size(scale: scale)))
+    }
 }
 
 /// A small rounded "chip" for tags, priorities and counts.
@@ -87,7 +150,7 @@ struct Chip: View {
             if let systemImage { Image(systemName: systemImage).imageScale(.small) }
             Text(text)
         }
-        .font(.caption2.weight(.semibold))
+        .appFont(.caption2, weight: .semibold)
         .padding(.horizontal, 7)
         .padding(.vertical, 3)
         .foregroundStyle(tint)

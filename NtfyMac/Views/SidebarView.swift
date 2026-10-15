@@ -93,7 +93,7 @@ struct SubscriptionRow: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(subscription.name).lineLimit(1)
                 Text(subscription.serverHost)
-                    .font(.caption2)
+                    .appFont(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
@@ -149,9 +149,9 @@ private struct ConnectionDiagnosticsPopover: View {
                 Image(systemName: details.state.symbol)
                     .foregroundStyle(details.state.tint)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(subscription.name).font(.headline)
+                    Text(subscription.name).appFont(.headline)
                     Text(details.state.label)
-                        .font(.caption).foregroundStyle(.secondary)
+                        .appFont(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
             }
@@ -168,14 +168,14 @@ private struct ConnectionDiagnosticsPopover: View {
                     diagnosticRow("Retries", "\(details.retryCount)")
                 }
             }
-            .font(.caption)
+            .appFont(.caption)
 
             if !details.resolvedAddresses.isEmpty {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Candidates")
-                        .font(.caption2).foregroundStyle(.secondary)
+                        .appFont(.caption2).foregroundStyle(.secondary)
                     Text(details.resolvedAddresses.joined(separator: "  ·  "))
-                        .font(.system(.caption2, design: .monospaced))
+                        .appFont(.caption2, design: .monospaced)
                         .textSelection(.enabled)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -183,7 +183,7 @@ private struct ConnectionDiagnosticsPopover: View {
 
             if let error = details.lastError, !details.state.isConnected {
                 Label(error, systemImage: "exclamationmark.triangle")
-                    .font(.caption)
+                    .appFont(.caption)
                     .foregroundStyle(.red)
                     .fixedSize(horizontal: false, vertical: true)
             }

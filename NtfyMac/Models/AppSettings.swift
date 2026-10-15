@@ -7,7 +7,6 @@
 
 import Foundation
 import Combine
-import SwiftUI
 
 @MainActor
 final class AppSettings: ObservableObject {
@@ -43,7 +42,7 @@ final class AppSettings: ObservableObject {
     @Published var historyLimitPerTopic: Int {
         didSet { defaults.set(historyLimitPerTopic, forKey: Keys.historyLimit) }
     }
-    /// Percentage increase applied through SwiftUI's dynamic type system.
+    /// Percentage increase applied to the app's semantic macOS fonts.
     @Published var textSizeIncrease: Int {
         didSet { defaults.set(max(0, min(100, textSizeIncrease)), forKey: Keys.textSizeIncrease) }
     }
@@ -146,15 +145,8 @@ final class AppSettings: ObservableObject {
         proxyPort = proxy.port
     }
 
-    var dynamicTypeSize: DynamicTypeSize {
-        switch textSizeIncrease {
-        case 1...20: return .xLarge
-        case 21...40: return .xxLarge
-        case 41...60: return .xxxLarge
-        case 61...80: return .accessibility1
-        case 81...100: return .accessibility2
-        default: return .large
-        }
+    var textScale: CGFloat {
+        1 + CGFloat(max(0, min(100, textSizeIncrease))) / 100
     }
 
     private func notifyProxyChanged() {

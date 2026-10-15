@@ -50,12 +50,12 @@ struct MessageDetailView: View {
                      tint: message.resolvedPriority.tint)
                 Spacer()
                 TimestampText(date: message.date)
-                    .font(.caption)
+                    .appFont(.caption)
                     .foregroundStyle(.secondary)
             }
 
             Text(headerTitle)
-                .font(.title.bold())
+                .appFont(.title, weight: .bold)
                 .textSelection(.enabled)
 
             if !message.labelTags.isEmpty {
@@ -84,7 +84,7 @@ struct MessageDetailView: View {
                     .textSelection(.enabled)
             }
         }
-        .font(.body)
+        .appFont(.body)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
         .cardBackground()
@@ -105,7 +105,7 @@ struct MessageDetailView: View {
         case let .code(source):
             ScrollView(.horizontal) {
                 Text(source)
-                    .font(.system(.body, design: .monospaced))
+                    .appFont(.body, design: .monospaced)
                     .textSelection(.enabled)
                     .fixedSize(horizontal: true, vertical: true)
                     .padding(12)
@@ -138,7 +138,7 @@ struct MessageDetailView: View {
     private func attachmentView(_ attachment: NtfyAttachment) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Label("Attachment", systemImage: "paperclip")
-                .font(.subheadline.weight(.semibold))
+                .appFont(.subheadline, weight: .semibold)
                 .foregroundStyle(.secondary)
 
             if attachment.isImage, let url = attachment.fileURL {
@@ -163,12 +163,12 @@ struct MessageDetailView: View {
     private func attachmentRow(_ attachment: NtfyAttachment) -> some View {
         HStack(spacing: 12) {
             Image(systemName: attachment.isImage ? "photo" : "doc")
-                .font(.title2)
+                .appFont(.title2)
                 .foregroundStyle(.teal)
             VStack(alignment: .leading, spacing: 2) {
                 Text(attachment.name).fontWeight(.medium)
                 if let size = attachment.humanSize {
-                    Text(size).font(.caption).foregroundStyle(.secondary)
+                    Text(size).appFont(.caption).foregroundStyle(.secondary)
                 }
             }
             Spacer()
@@ -190,7 +190,7 @@ struct MessageDetailView: View {
     private func actionsView(_ actions: [NtfyAction]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Label("Actions", systemImage: "bolt")
-                .font(.subheadline.weight(.semibold))
+                .appFont(.subheadline, weight: .semibold)
                 .foregroundStyle(.secondary)
 
             ForEach(actions) { action in
@@ -208,7 +208,7 @@ struct MessageDetailView: View {
                     if runningActionID == action.id {
                         ProgressView().scaleEffect(0.6)
                     } else if let status = actionStatus[action.id] {
-                        Text(status).font(.caption).foregroundStyle(.secondary)
+                        Text(status).appFont(.caption).foregroundStyle(.secondary)
                     }
                 }
             }
@@ -244,11 +244,11 @@ struct MessageDetailView: View {
                     Text("Click").foregroundStyle(.secondary).frame(width: 90, alignment: .leading)
                     Link(click.absoluteString, destination: click).lineLimit(1)
                 }
-                .font(.caption)
+                .appFont(.caption)
             }
             metaRow("Received", AppDateFormat.fullTimestamp(message.date))
         }
-        .font(.caption)
+        .appFont(.caption)
     }
 
     private func metaRow(_ label: String, _ value: String) -> some View {

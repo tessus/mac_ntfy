@@ -98,8 +98,8 @@ struct MessageListView: View {
     private var header: some View {
         HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.title2.bold())
-                Text(subtitle).font(.caption).foregroundStyle(.secondary)
+                Text(title).appFont(.title2, weight: .bold)
+                Text(subtitle).appFont(.caption).foregroundStyle(.secondary)
             }
             Spacer()
 
@@ -177,11 +177,11 @@ struct EmptyMessagesView: View {
                 .font(.system(size: 46))
                 .foregroundStyle(Theme.brandGradient)
             Text("No messages yet")
-                .font(.title3.weight(.semibold))
+                .appFont(.title3, weight: .semibold)
             Text(isSubscription
                  ? "Messages published to this topic will appear here in real time."
                  : "Subscribe to a topic to start receiving notifications.")
-                .font(.subheadline)
+                .appFont(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 320)
