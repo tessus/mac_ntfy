@@ -12,6 +12,7 @@ struct MenuPanelView: View {
     @EnvironmentObject var manager: SubscriptionManager
     @EnvironmentObject var settings: AppSettings
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.dismiss) private var dismiss
     @State private var panelContentHeight: CGFloat = 0
 
     private var unreadMessages: [StoredMessage] {
@@ -147,6 +148,7 @@ struct MenuPanelView: View {
     private var footer: some View {
         HStack(spacing: 12) {
             Button {
+                dismiss()
                 openMain()
             } label: {
                 Label("Open Ntfy", systemImage: "macwindow")
@@ -155,6 +157,7 @@ struct MenuPanelView: View {
 
             Button {
                 manager.markAllRead()
+                dismiss()
             } label: {
                 Image(systemName: "checkmark.circle")
             }
@@ -183,6 +186,7 @@ struct MenuPanelView: View {
     /// scene being created but left inactive behind the panel.
     private var settingsButton: some View {
         Button {
+            dismiss()
             SettingsWindow.prepareToOpen()
             openWindow(id: "settings")
             SettingsWindow.focusSoon()
