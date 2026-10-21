@@ -24,6 +24,7 @@ final class AppSettings: ObservableObject {
         static let quietEndMinutes = "quietEndMinutes"
         static let notificationsPausedUntil = "notificationsPausedUntil"
         static let textSizeIncrease = "textSizeIncrease"
+        static let notificationPauseDuration = "notificationPauseDuration"
     }
 
     @Published var defaultServer: String {
@@ -79,6 +80,15 @@ final class AppSettings: ObservableObject {
             }
         }
     }
+    @Published var notificationPauseDuration: NotificationPauseDuration? {
+    didSet {
+        if let notificationPauseDuration {
+            defaults.set(notificationPauseDuration.rawValue, forKey: Keys.notificationPauseDuration)
+        } else {
+            defaults.removeObject(forKey: Keys.notificationPauseDuration)
+        }
+    }
+}
 
     // Proxy handling for all ntfy traffic; see ProxyConfig for the rationale.
     @Published var proxyMode: ProxyMode {
@@ -137,6 +147,7 @@ final class AppSettings: ObservableObject {
         quietStartMinutes = defaults.integer(forKey: Keys.quietStartMinutes)
         quietEndMinutes = defaults.integer(forKey: Keys.quietEndMinutes)
         notificationsPausedUntil = defaults.object(forKey: Keys.notificationsPausedUntil) as? Date
+        notificationPauseDuration = defaults.string(forKey: Keys.notificationPauseDuration).flatMap(NotificationPauseDuration.init(rawValue:))
 
         let proxy = ProxyConfig.current(defaults: defaults)
         proxyMode = proxy.mode
@@ -153,8 +164,22 @@ final class AppSettings: ObservableObject {
         NotificationCenter.default.post(name: .ntfyProxyConfigChanged, object: nil)
     }
 
+    enum NotificationPauseDuration: String {
+        case oneHour
+        case fourHours
+        case tomorrowMorning
+    }
+
     func pauseNotifications(for interval: TimeInterval, from date: Date = Date()) {
         notificationsPausedUntil = date.addingTimeInterval(interval)
+
+        if interval == 60 * 60 {
+            notificationPauseDuration = .oneHour
+        } else if interval == 4 * 60 * 60 {
+            notificationPauseDuration = .fourHours
+        } else {
+            notificationPauseDuration = nil
+        }
     }
 
     func pauseUntilTomorrowMorning(from date: Date = Date(), calendar: Calendar = .current) {
@@ -165,10 +190,12 @@ final class AppSettings: ObservableObject {
             second: 0,
             of: tomorrow
         ) ?? tomorrow
+        notificationPauseDuration = .tomorrowMorning
     }
 
     func resumeNotifications() {
         notificationsPausedUntil = nil
+        notificationPauseDuration = nil
     }
 
     func isTemporarilyPaused(at date: Date = Date()) -> Bool {
