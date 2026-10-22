@@ -197,15 +197,49 @@ struct MenuPanelView: View {
 
     private var notificationPauseMenu: some View {
         TimelineView(.periodic(from: .now, by: 30)) { context in
+            let isPaused = settings.isTemporarilyPaused(at: context.date)
+            let resumeTime = formattedResumeTime(settings.notificationsPausedUntil)
             Menu {
-                if settings.isTemporarilyPaused(at: context.date) {
+                if isPaused {
                     Button("Resume notifications") { settings.resumeNotifications() }
                     Divider()
                 }
-                Button("Pause for 1 hour") { settings.pauseNotifications(for: 60 * 60) }
-                Button("Pause for 4 hours") { settings.pauseNotifications(for: 4 * 60 * 60) }
-                Button("Pause until tomorrow at 8:00") {
+                Button {
+                    settings.pauseNotifications(for: 60 * 60)
+                } label: {
+                    HStack {
+                        if isPaused && settings.notificationPauseDuration == .oneHour {
+                            Text("Pause for 1 hour · Paused until \(resumeTime)")
+                            Spacer()
+                            Image(systemName: "checkmark")
+                        } else {
+                            Text("Pause for 1 hour")
+                        }
+                    }
+                }
+                Button {
+                    settings.pauseNotifications(for: 4 * 60 * 60)
+                } label: {
+                    HStack {
+                        if isPaused && settings.notificationPauseDuration == .fourHours {
+                            Text("Pause for 4 hours · Paused until \(resumeTime)")
+                            Spacer()
+                            Image(systemName: "checkmark")
+                        } else {
+                            Text("Pause for 4 hours")
+                        }
+                    }
+                }
+                Button {
                     settings.pauseUntilTomorrowMorning()
+                } label: {
+                    HStack {
+                        Text("Pause until tomorrow at 8:00")
+                        if isPaused && settings.notificationPauseDuration == .tomorrowMorning {
+                            Spacer()
+                            Image(systemName: "checkmark")
+                        }
+                    }
                 }
             } label: {
                 Image(systemName: settings.isTemporarilyPaused(at: context.date)
@@ -213,7 +247,7 @@ struct MenuPanelView: View {
                     .foregroundStyle(settings.isTemporarilyPaused(at: context.date) ? .orange : .primary)
             }
             .help(settings.isTemporarilyPaused(at: context.date)
-                  ? "Notifications temporarily paused" : "Pause notifications")
+                  ? "Notifications temporarily paused until \(resumeTime)" : "Pause notifications")
         }
     }
 
@@ -221,6 +255,16 @@ struct MenuPanelView: View {
         // Restore normal Dock and Stage Manager behavior before opening.
         AppActivation.enterWindowMode()
         openWindow(id: "main")
+    }
+
+    private static let resumeTimeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter
+    }()
+
+    private func formattedResumeTime(_ date: Date?) -> String {
+        date.map { Self.resumeTimeFormatter.string(from: $0) } ?? ""
     }
 }
 
