@@ -127,6 +127,13 @@ final class SubscriptionManager: ObservableObject {
         connect(sub)
     }
 
+    func moveSubscriptions(from source: IndexSet, to destination: Int) {
+        guard !source.isEmpty else { return }
+
+        subscriptions.move(fromOffsets: source, toOffset: destination)
+        persistSubscriptions()
+    }
+
     func updateSubscription(_ sub: Subscription) {
         guard let idx = subscriptions.firstIndex(where: { $0.id == sub.id }) else { return }
         let old = subscriptions[idx]

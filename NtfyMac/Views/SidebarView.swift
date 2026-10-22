@@ -58,6 +58,9 @@ struct SidebarView: View {
                         }
                     }
                 }
+                .onMove { source, destination in
+                    manager.moveSubscriptions(from: source, to: destination)
+                }
             }
         }
         .listStyle(.sidebar)
