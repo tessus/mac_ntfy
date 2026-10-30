@@ -14,6 +14,7 @@ struct MenuPanelView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismiss) private var dismiss
     @State private var panelContentHeight: CGFloat = 0
+    @State private var hadUnreadMessages = false
 
     private var unreadMessages: [StoredMessage] {
         manager.recentMessages.filter { !$0.isRead }
@@ -47,6 +48,17 @@ struct MenuPanelView: View {
         .background(MenuPanelWindowResizer(targetHeight: panelContentHeight))
         // Update instantly when content changes — no sliding/fly-in animations.
         .transaction { $0.animation = nil }
+        // Close menu bar window, when last message is marked read
+        .onAppear {
+            hadUnreadMessages = !unreadMessages.isEmpty
+        }
+        .onChange(of: unreadMessages.isEmpty) { isEmpty in
+            if isEmpty && hadUnreadMessages {
+                dismiss()
+            } else if !isEmpty {
+                hadUnreadMessages = true
+            }
+        }
     }
 
     /// Fixed-height content area. Unread rows scroll inside this space so the
